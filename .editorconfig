@@ -1,0 +1,14 @@
+# 上位ディレクトリから .editorconfig 設定を継承する場合は、以下の行を削除します
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{cs,uxml,uss}]
+indent_style = space
+indent_size = 4
+
+[*.cs]
+charset = utf-8
