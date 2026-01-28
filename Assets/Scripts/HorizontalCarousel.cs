@@ -1,0 +1,371 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using Unity.Properties;
+using UnityEngine;
+using UnityEngine.UIElements;
+using UnityEngine.UIElements.Experimental;
+
+[UxmlElement]
+public partial class HorizontalCarousel : VisualElement
+{
+    public const string ussClassName = "horizontal-carousel";
+    public const string containerUssClassName = ussClassName + "__container";
+
+    private float m_ScrollOffset;
+
+    private int m_ScrolledItemIndex;
+
+    private IVisualElementScheduledItem m_ScrollAnimation;
+
+    private float m_AnimStartTime;
+    private float m_AnimDuration;
+
+    private float m_AnimStartOffset;
+    private float m_AnimTargetOffset;
+
+    private const long k_IntervalMs = 16;
+
+    [UxmlAttribute]
+    public VisualTreeAsset itemTemplate { get; set; }
+
+    [UxmlAttribute]
+    public int visibleItemCount { get; set; }
+
+    [UxmlAttribute]
+    public float fixedItemWidth { get; set; } = 100f;
+
+    [UxmlAttribute]
+    public float animationSpeed { get; set; } = 0.25f;
+
+    [UxmlAttribute]
+    public float swipeMultiplier { get; set; } = 3f;
+
+    [UxmlAttribute]
+    public float maxSlide { get; set; } = 0.5f;
+
+    private VisualElement m_Container;
+
+    public override VisualElement contentContainer => m_Container;
+
+    private class ItemState
+    {
+        public VisualElement item;
+
+        public int srcIndex;
+    }
+
+    private List<ItemState> m_ItemStates = new List<ItemState>();
+
+    private int m_ItemCount = 0;
+
+    public Func<VisualElement> makeItem { get; set; }
+
+    public Action<VisualElement, int> bindItem { get; set; }
+
+    private IList m_ItemsSource;
+
+    private int m_ItemSourceCount = 0;
+
+    public IList itemsSource
+    {
+        get => m_ItemsSource;
+        set
+        {
+            if (value == m_ItemsSource)
+                return;
+
+            m_ItemsSource = value;
+            Rebuild();
+        }
+    }
+
+    private int m_Value = -1;
+
+    public int value
+    {
+        get => m_Value;
+        set
+        {
+            if (SetValue(value))
+            {
+                var srcWidth = m_ItemSourceCount * fixedItemWidth;
+                var targetOffset = Mathf.Floor(m_ScrollOffset / srcWidth) * srcWidth + m_Value * fixedItemWidth;
+                StartScrollAnimation(targetOffset);
+            }
+        }
+    }
+
+    public void ScrollTo(int amount)
+    {
+        // 連打防止
+        if (m_ScrollAnimation?.isActive == true)
+            return;
+
+        var targetOffset = m_ScrollOffset + amount * fixedItemWidth;
+        var targetIndex = Mathf.RoundToInt(targetOffset / fixedItemWidth);
+
+        SetValue(targetIndex);
+
+        StartScrollAnimation(targetOffset);
+    }
+
+    public HorizontalCarousel()
+    {
+        AddToClassList(ussClassName);
+
+        m_Container = new VisualElement
+        {
+            name = containerUssClassName
+        };
+        m_Container.AddToClassList(containerUssClassName);
+        // contentContainer を上書きしているので単純なAdd だと無限ループになる
+        hierarchy.Add(m_Container);
+
+        var scrollable = new Scrollable(OnDown, OnScroll, OnUp);
+        m_Container.AddManipulator(scrollable);
+    }
+
+    private ItemState MakeItem()
+    {
+        VisualElement item = null;
+
+        if (makeItem != null)
+        {
+            item = makeItem.Invoke();
+        }
+        else if (itemTemplate != null)
+        {
+            item = itemTemplate.Instantiate();
+        }
+        else
+        {
+            item = new Label("Template Not Found");
+        }
+
+        item.AddToClassList(ussClassName + "__item");
+        m_Container.Add(item);
+
+        // なぜかこれやらないと、長距離移動のとき幅0 になる？（データセットのタイミングでやるのがいい？）
+        item.style.width = fixedItemWidth;
+
+        var itemState = new ItemState
+        {
+            item = item,
+            srcIndex = -1
+        };
+
+        return itemState;
+    }
+
+    private void BindItem(ItemState itemState, int virtualIndex)
+    {
+        var srcIndex = RepeatInt(virtualIndex, m_ItemSourceCount);
+
+        if (bindItem != null)
+        {
+            bindItem.Invoke(itemState.item, srcIndex);
+        }
+
+        // autoAssignSource フラグ要る？
+        itemState.item.dataSource = m_ItemsSource;
+        itemState.item.dataSourcePath = PropertyPath.FromIndex(srcIndex);
+        itemState.srcIndex = srcIndex;
+
+        SetItemSelected(itemState);
+    }
+
+    /// <summary>
+    /// モデルが更新されたら呼ぶ
+    /// </summary>
+    public void Rebuild()
+    {
+        m_ItemSourceCount = m_ItemsSource?.Count ?? 0;
+        m_ItemCount = Mathf.Min(visibleItemCount, m_ItemSourceCount);
+
+        m_ItemStates.Clear();
+        m_Container.Clear();
+
+        m_ScrollOffset = 0;
+        m_ScrolledItemIndex = 0;
+
+        m_Value = m_ItemSourceCount > 0 ? 0 : -1;
+
+        for (int i = 0; i < m_ItemCount; i++)
+        {
+            var itemState = MakeItem();
+            m_ItemStates.Add(itemState);
+
+            BindItem(itemState, i);
+        }
+
+        Debug.Log($"m_ItemCount: {m_ItemCount}");
+    }
+
+    private void OnDown(Scrollable scrollable)
+    {
+        m_ScrollAnimation?.Pause();
+    }
+
+    private void OnScroll(Scrollable scrollable)
+    {
+        m_ScrollOffset -= scrollable.deltaPos.x;
+        PositionAllItems();
+    }
+
+    private void OnUp(Scrollable scrollable)
+    {
+        //Debug.Log($"velocity:{scrollable.velocity}}");
+
+        var additionalOffset = -scrollable.velocity.x * k_IntervalMs * swipeMultiplier;
+        var max = fixedItemWidth * maxSlide;
+        additionalOffset = Mathf.Clamp(additionalOffset, -max, max);
+        var predictedOffset = m_ScrollOffset + additionalOffset;
+
+        // 予測位置に最も近いカードのインデックスを計算
+        var targetIndex = Mathf.RoundToInt(predictedOffset / fixedItemWidth);
+
+        Debug.Log($"m_ScrollOffset:{m_ScrollOffset} additionalOffset:{additionalOffset} targetIndex:{targetIndex}");
+
+        // value 更新
+        SetValue(targetIndex);
+
+        var snappedOffset = targetIndex * fixedItemWidth;
+        StartScrollAnimation(snappedOffset);
+    }
+
+    private void PositionAllItems()
+    {
+        if (m_ItemCount <= 0)
+            return;
+
+        var layoutOffset = Mathf.Repeat(m_ScrollOffset, m_ItemCount * fixedItemWidth);
+        //Debug.Log($"m_ScrollOffset: {m_ScrollOffset}, layoutOffset: {layoutOffset}");
+
+        foreach (var itemState in m_ItemStates)
+        {
+            itemState.item.style.translate = new Translate(-layoutOffset, 0);
+        }
+
+        var targetIndex = Mathf.FloorToInt(m_ScrollOffset / fixedItemWidth);
+
+        var paddingUnit = RepeatInt(targetIndex, m_ItemCount);
+        m_Container.style.paddingLeft = paddingUnit * fixedItemWidth;
+        //Debug.Log($"handleloop targetIndex: {targetIndex} paddingUnit: {paddingUnit}");
+
+        if (targetIndex != m_ScrolledItemIndex)
+        {
+            var indexDiff = targetIndex - m_ScrolledItemIndex;
+            //Debug.Log($"indexDiff: {indexDiff}, targetIndex: {targetIndex}, m_ScrolledItemIndex: {m_ScrolledItemIndex}");
+
+            if (indexDiff > 0)
+            {
+                for (int i = 0; i < indexDiff; i++)
+                {
+                    var itemIndex = RepeatInt(m_ScrolledItemIndex + i, m_ItemCount);
+                    m_ItemStates[itemIndex].item.BringToFront();
+
+                    var nextVirtualIndex = m_ScrolledItemIndex + m_ItemCount + i;
+                    BindItem(m_ItemStates[itemIndex], nextVirtualIndex);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < -indexDiff; i++)
+                {
+                    var itemIndex = RepeatInt(m_ScrolledItemIndex + m_ItemCount - 1 - i, m_ItemCount);
+                    m_ItemStates[itemIndex].item.SendToBack();
+
+                    var nextVirtualIndex = m_ScrolledItemIndex - 1 - i;
+                    BindItem(m_ItemStates[itemIndex], nextVirtualIndex);
+                }
+            }
+
+            m_ScrolledItemIndex = targetIndex;
+        }
+    }
+
+    private void StartScrollAnimation(float targetOffset)
+    {
+        m_ScrollAnimation?.Pause();
+
+        m_AnimStartTime = Time.unscaledTime;
+
+        m_AnimStartOffset = m_ScrollOffset;
+        m_AnimTargetOffset = targetOffset;
+
+        var distance = Mathf.Abs(m_AnimTargetOffset - m_AnimStartOffset);
+        m_AnimDuration = distance / fixedItemWidth * Mathf.Max(0.1f, animationSpeed);
+        //Debug.Log($"distance:{distance} duration:{m_AnimDuration}");
+
+        if (m_ScrollAnimation == null)
+        {
+            m_ScrollAnimation = schedule.Execute(ScrollAnimation).Every(k_IntervalMs);
+        }
+        else
+        {
+            m_ScrollAnimation.Resume();
+        }
+    }
+
+    private void ScrollAnimation()
+    {
+        var elapsed = Time.unscaledTime - m_AnimStartTime;
+
+        var t = Mathf.Clamp01(elapsed / m_AnimDuration);
+        var easedT = Easing.OutCubic(t);
+
+        m_ScrollOffset = Mathf.Lerp(m_AnimStartOffset, m_AnimTargetOffset, easedT);
+        PositionAllItems();
+
+        if (t >= 1f)
+        {
+            m_ScrollOffset = m_AnimTargetOffset;
+            PositionAllItems();
+            m_ScrollAnimation.Pause();
+        }
+    }
+
+    private bool SetValue(int newValue)
+    {
+        if (m_ItemSourceCount <= 0)
+        {
+            m_Value = -1;
+            return false;
+        }
+
+        newValue = RepeatInt(newValue, m_ItemSourceCount);
+
+        if (newValue == m_Value)
+            return false;
+
+        m_Value = newValue;
+
+        for(int i = 0; i < m_ItemCount; i++)
+            SetItemSelected(m_ItemStates[i]);
+
+        Debug.Log($"m_ScrollOffset:{m_ScrollOffset} value:{m_Value}");
+
+        // TODO: イベント？
+
+        return true;
+    }
+
+    private void SetItemSelected(ItemState itemState)
+    {
+        if (itemState.srcIndex == m_Value)
+            itemState.item.AddToClassList("is-selected");
+        else
+            itemState.item.RemoveFromClassList("is-selected");
+    }
+
+    // Mathf.Repeat のint版が無いので作成
+    private static int RepeatInt(int value, int length)
+    {
+        if (length <= 0)
+            return 0;
+
+        var result = value % length;
+        return result < 0 ? result + length : result;
+    }
+}

@@ -129,6 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 205978017}
   - component: {fileID: 205978016}
+  - component: {fileID: 205978018}
   m_Layer: 5
   m_Name: UIDocument
   m_TagString: Untagged
@@ -150,7 +151,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
   m_PanelSettings: {fileID: 11400000, guid: edb544280477df347bd5dd3d38d7a98e, type: 2}
   m_ParentUI: {fileID: 0}
-  sourceAsset: {fileID: 9197481963319205126, guid: ea890d7801b0d084eb6b42f44a7b1423, type: 3}
+  sourceAsset: {fileID: 9197481963319205126, guid: aa5cead3f238f79479dfd141605a3c79, type: 3}
   m_SortingOrder: 0
   m_Position: 0
   m_WorldSpaceSizeMode: 1
@@ -174,6 +175,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &205978018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 205978015}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5783d627f38abc469fb7593b42af6bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HorizontalCarouselExample
+  m_CardDatas:
+  - {fileID: 11400000, guid: ec04b6d4b7b568849a74aaaecde49bbd, type: 2}
+  - {fileID: 11400000, guid: 4fdd1f5f5a7394744a913b1759e25862, type: 2}
+  - {fileID: 11400000, guid: fafd3210af587e6479237f0707c71ff1, type: 2}
+  - {fileID: 11400000, guid: c208278486b93d640a1e6e4c785a8ef7, type: 2}
+  - {fileID: 11400000, guid: 1deaf56f7fc484f488ffedad057793b7, type: 2}
+  m_ItemTemplate: {fileID: 0}
 --- !u!1 &1850344370
 GameObject:
   m_ObjectHideFlags: 0
@@ -211,7 +231,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  m_BackGroundColor: {r: 0.8, g: 0.8, b: 0.8, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0

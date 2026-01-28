@@ -1,0 +1,8 @@
+.horizontal-carousel__container {
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+.horizontal-carousel__item {
+    flex-shrink: 0;
+}

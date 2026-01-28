@@ -1,0 +1,16 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Template name="CardItem" src="project://database/Assets/UI/CardItem.uxml?fileID=9197481963319205126&amp;guid=2ff57b4c62e43bf4ea3fb534e70b93b8&amp;type=3#CardItem"/>
+    <ui:VisualElement>
+        <HorizontalCarousel visible-item-count="4" fixed-item-width="210" item-template="project://database/Assets/UI/CardItem.uxml?fileID=9197481963319205126&amp;guid=2ff57b4c62e43bf4ea3fb534e70b93b8&amp;type=3#CardItem">
+            <ui:Instance template="CardItem" class="horizontal-carousel__item"/>
+            <ui:Instance template="CardItem" class="horizontal-carousel__item"/>
+            <ui:Instance template="CardItem" class="horizontal-carousel__item"/>
+        </HorizontalCarousel>
+        <ui:VisualElement name="button-scroll" class="debug-button__container">
+            <ui:Button text="-2" class="debug-button"/>
+            <ui:Button text="-1" class="debug-button"/>
+            <ui:Button text="+1" class="debug-button"/>
+            <ui:Button text="+2" class="debug-button"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,44 @@
+.horizontal-carousel__container {
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+.horizontal-carousel__item {
+    padding-right: 10px;
+    flex-shrink: 0;
+}
+
+.debug-button__container {
+    flex-direction: row;
+    margin-top: 10px;
+}
+
+.debug-button {
+    margin: 0;
+    margin-right: 10px;
+    flex-grow: 1;
+}
+
+/* card */
+.card {
+    width: 200px;
+    height: 200px;
+    background-color: rgb(51, 51, 51);
+}
+
+.card-label {
+    flex-grow: 1;
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-center;
+    font-size: 40px;
+}
+
+.card-image {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+}
+
+.is-selected .card-label {
+    color: rgb(255, 235, 4);
+}

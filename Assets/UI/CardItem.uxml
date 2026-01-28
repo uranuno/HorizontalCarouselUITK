@@ -1,0 +1,14 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement name="card" data-source-type="CardData, Assembly-CSharp" class="card">
+        <ui:VisualElement name="card-image" class="card-image" style="background-image: resource(&quot;Numbers/number_0&quot;);">
+            <Bindings>
+                <ui:DataBinding property="style.backgroundImage" data-source-path="Image" binding-mode="ToTarget"/>
+            </Bindings>
+        </ui:VisualElement>
+        <ui:Label text="Label" name="card-label" class="card-label">
+            <Bindings>
+                <ui:DataBinding property="text" data-source-path="Label" binding-mode="ToTarget"/>
+            </Bindings>
+        </ui:Label>
+    </ui:VisualElement>
+</ui:UXML>
