@@ -44,6 +44,9 @@ public partial class HorizontalCarousel : VisualElement
     [UxmlAttribute]
     public float maxSlide { get; set; } = 0.5f;
 
+    [UxmlAttribute]
+    public bool isCenter {  get; set; } = false;
+
     private VisualElement m_Container;
 
     public override VisualElement contentContainer => m_Container;
@@ -124,6 +127,8 @@ public partial class HorizontalCarousel : VisualElement
 
         var scrollable = new Scrollable(OnDown, OnScroll, OnUp);
         m_Container.AddManipulator(scrollable);
+
+        m_Container.RegisterCallback<GeometryChangedEvent>(OnContainerGeometryChanged);
     }
 
     private ItemState MakeItem()
@@ -200,6 +205,7 @@ public partial class HorizontalCarousel : VisualElement
         }
 
         Debug.Log($"m_ItemCount: {m_ItemCount}");
+        PositionAllItems();
     }
 
     private void OnDown(Scrollable scrollable)
@@ -234,6 +240,18 @@ public partial class HorizontalCarousel : VisualElement
         StartScrollAnimation(snappedOffset);
     }
 
+    private void OnContainerGeometryChanged(GeometryChangedEvent evt)
+    {
+        if (m_ItemCount <= 0)
+            return;
+
+        if (isCenter)
+        {
+            var centerOffset = fixedItemWidth * m_ItemCount * 0.5f - m_Container.layout.width * 0.5f;
+            //m_Container.style.marginLeft = centerOffset;
+        }
+    }
+
     private void PositionAllItems()
     {
         if (m_ItemCount <= 0)
@@ -253,9 +271,11 @@ public partial class HorizontalCarousel : VisualElement
         m_Container.style.paddingLeft = paddingUnit * fixedItemWidth;
         //Debug.Log($"handleloop targetIndex: {targetIndex} paddingUnit: {paddingUnit}");
 
-        if (targetIndex != m_ScrolledItemIndex)
+        var targetIndexWithOffset = targetIndex - (isCenter ? Mathf.FloorToInt(m_ItemCount * 0.5f) : 0);
+
+        if (targetIndexWithOffset != m_ScrolledItemIndex)
         {
-            var indexDiff = targetIndex - m_ScrolledItemIndex;
+            var indexDiff = targetIndexWithOffset - m_ScrolledItemIndex;
             //Debug.Log($"indexDiff: {indexDiff}, targetIndex: {targetIndex}, m_ScrolledItemIndex: {m_ScrolledItemIndex}");
 
             if (indexDiff > 0)
@@ -281,7 +301,7 @@ public partial class HorizontalCarousel : VisualElement
                 }
             }
 
-            m_ScrolledItemIndex = targetIndex;
+            m_ScrolledItemIndex = targetIndexWithOffset;
         }
     }
 
