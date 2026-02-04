@@ -10,6 +10,7 @@ using UnityEngine.UIElements.Experimental;
 public partial class HorizontalCarousel : VisualElement
 {
     public const string ussClassName = "horizontal-carousel";
+    public const string viewportUssClassName = ussClassName + "__viewport";
     public const string containerUssClassName = ussClassName + "__container";
 
     private float m_ScrollOffset;
@@ -33,6 +34,9 @@ public partial class HorizontalCarousel : VisualElement
     public int visibleItemCount { get; set; }
 
     [UxmlAttribute]
+    public int offsetItemCount { get; set; }
+
+    [UxmlAttribute]
     public float fixedItemWidth { get; set; } = 100f;
 
     [UxmlAttribute]
@@ -45,11 +49,15 @@ public partial class HorizontalCarousel : VisualElement
     public float maxSlide { get; set; } = 0.5f;
 
     [UxmlAttribute]
-    public bool isCenter {  get; set; } = false;
+    public bool isCenter { get; set; } = false;
+
+    private VisualElement m_Viewport;
 
     private VisualElement m_Container;
 
     public override VisualElement contentContainer => m_Container;
+
+    private float m_CenterOffset;
 
     private class ItemState
     {
@@ -117,18 +125,20 @@ public partial class HorizontalCarousel : VisualElement
     {
         AddToClassList(ussClassName);
 
-        m_Container = new VisualElement
-        {
-            name = containerUssClassName
-        };
+        m_Viewport = new VisualElement { name = viewportUssClassName };
+        m_Viewport.AddToClassList(viewportUssClassName);
+        m_Viewport.pickingMode = PickingMode.Ignore;
+        hierarchy.Add(m_Viewport);
+
+        m_Container = new VisualElement { name = containerUssClassName };
         m_Container.AddToClassList(containerUssClassName);
         // contentContainer を上書きしているので単純なAdd だと無限ループになる
-        hierarchy.Add(m_Container);
+        m_Viewport.Add(m_Container);
 
         var scrollable = new Scrollable(OnDown, OnScroll, OnUp);
         m_Container.AddManipulator(scrollable);
 
-        m_Container.RegisterCallback<GeometryChangedEvent>(OnContainerGeometryChanged);
+        m_Viewport.RegisterCallback<GeometryChangedEvent>(OnViewportGeometryChanged);
     }
 
     private ItemState MakeItem()
@@ -205,7 +215,6 @@ public partial class HorizontalCarousel : VisualElement
         }
 
         Debug.Log($"m_ItemCount: {m_ItemCount}");
-        PositionAllItems();
     }
 
     private void OnDown(Scrollable scrollable)
@@ -240,16 +249,11 @@ public partial class HorizontalCarousel : VisualElement
         StartScrollAnimation(snappedOffset);
     }
 
-    private void OnContainerGeometryChanged(GeometryChangedEvent evt)
+    private void OnViewportGeometryChanged(GeometryChangedEvent evt)
     {
-        if (m_ItemCount <= 0)
-            return;
-
-        if (isCenter)
-        {
-            var centerOffset = fixedItemWidth * m_ItemCount * 0.5f - m_Container.layout.width * 0.5f;
-            //m_Container.style.marginLeft = centerOffset;
-        }
+        m_CenterOffset = m_Viewport.layout.width * 0.5f - (offsetItemCount + 0.5f) * fixedItemWidth;
+        Debug.Log($"viewportWidth: {m_Viewport.layout.width} contentWidth: {m_Container.layout.width}");
+        PositionAllItems();
     }
 
     private void PositionAllItems()
@@ -259,6 +263,9 @@ public partial class HorizontalCarousel : VisualElement
 
         var layoutOffset = Mathf.Repeat(m_ScrollOffset, m_ItemCount * fixedItemWidth);
         //Debug.Log($"m_ScrollOffset: {m_ScrollOffset}, layoutOffset: {layoutOffset}");
+
+        if (isCenter)
+            layoutOffset -= m_CenterOffset;
 
         foreach (var itemState in m_ItemStates)
         {
@@ -271,7 +278,7 @@ public partial class HorizontalCarousel : VisualElement
         m_Container.style.paddingLeft = paddingUnit * fixedItemWidth;
         //Debug.Log($"handleloop targetIndex: {targetIndex} paddingUnit: {paddingUnit}");
 
-        var targetIndexWithOffset = targetIndex - (isCenter ? Mathf.FloorToInt(m_ItemCount * 0.5f) : 0);
+        var targetIndexWithOffset = targetIndex - offsetItemCount;
 
         if (targetIndexWithOffset != m_ScrolledItemIndex)
         {
@@ -361,7 +368,7 @@ public partial class HorizontalCarousel : VisualElement
 
         m_Value = newValue;
 
-        for(int i = 0; i < m_ItemCount; i++)
+        for (int i = 0; i < m_ItemCount; i++)
             SetItemSelected(m_ItemStates[i]);
 
         Debug.Log($"m_ScrollOffset:{m_ScrollOffset} value:{m_Value}");
