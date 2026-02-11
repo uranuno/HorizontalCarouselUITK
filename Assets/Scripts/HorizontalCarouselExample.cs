@@ -27,7 +27,25 @@ public class HorizontalCarouselExample : MonoBehaviour
                 try
                 {
                     var scrollAmount = int.Parse(str);
-                    horizontalCarousel.ScrollTo(scrollAmount);
+                    horizontalCarousel.ScrollBy(scrollAmount);
+                }
+                catch (FormatException e)
+                {
+                    Debug.LogException(e);
+                }
+            };
+        });
+
+        var valueButtons = root.Q("button-value").Query<Button>();
+        valueButtons.ForEach(button =>
+        {
+            button.clicked += () =>
+            {
+                var str = button.text;
+                try
+                {
+                    var targetValue = int.Parse(str);
+                    horizontalCarousel.value = targetValue;
                 }
                 catch (FormatException e)
                 {

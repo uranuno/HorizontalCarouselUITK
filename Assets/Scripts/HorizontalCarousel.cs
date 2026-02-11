@@ -12,6 +12,7 @@ public partial class HorizontalCarousel : VisualElement
     public const string ussClassName = "horizontal-carousel";
     public const string containerUssClassName = ussClassName + "__container";
 
+    // 現在のスクロール位置（virtual座標）
     private float m_ScrollOffset;
 
     private int m_ScrolledItemIndex;
@@ -52,6 +53,7 @@ public partial class HorizontalCarousel : VisualElement
     {
         public VisualElement item;
 
+        // どのItemsSource をBind しているか（is-selected 判定に使用）
         public int srcIndex;
     }
 
@@ -90,21 +92,24 @@ public partial class HorizontalCarousel : VisualElement
             if (SetValue(value))
             {
                 var srcWidth = m_ItemSourceCount * fixedItemWidth;
-                var targetOffset = Mathf.Floor(m_ScrollOffset / srcWidth) * srcWidth + m_Value * fixedItemWidth;
+                var currentCycle = Mathf.Floor(m_ScrollOffset / srcWidth);
+                // 現在の周を考慮して移動
+                var targetOffset = currentCycle * srcWidth + m_Value * fixedItemWidth;
                 StartScrollAnimation(targetOffset);
             }
         }
     }
 
-    public void ScrollTo(int amount)
+    // 相対量でのスクロール
+    public void ScrollBy(int amount)
     {
         // 連打防止
         if (m_ScrollAnimation?.isActive == true)
             return;
 
         var targetOffset = m_ScrollOffset + amount * fixedItemWidth;
-        var targetIndex = Mathf.RoundToInt(targetOffset / fixedItemWidth);
 
+        var targetIndex = Mathf.RoundToInt(targetOffset / fixedItemWidth);
         SetValue(targetIndex);
 
         StartScrollAnimation(targetOffset);

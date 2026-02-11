@@ -12,5 +12,13 @@
             <ui:Button text="+1" class="debug-button"/>
             <ui:Button text="+2" class="debug-button"/>
         </ui:VisualElement>
+        <ui:VisualElement name="button-value" class="debug-button__container">
+            <ui:Button text="0" class="debug-button"/>
+            <ui:Button text="1" class="debug-button"/>
+            <ui:Button text="2" class="debug-button"/>
+            <ui:Button text="3" class="debug-button"/>
+            <ui:Button text="4" class="debug-button"/>
+            <ui:Button text="5" class="debug-button"/>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
