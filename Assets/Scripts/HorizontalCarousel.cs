@@ -177,7 +177,8 @@ public partial class HorizontalCarousel : VisualElement
         itemState.item.dataSourcePath = PropertyPath.FromIndex(srcIndex);
         itemState.srcIndex = srcIndex;
 
-        SetItemSelected(itemState);
+        // 選択状態をクリアする
+        SetItemSelected(itemState, -1);
     }
 
     /// <summary>
@@ -194,7 +195,8 @@ public partial class HorizontalCarousel : VisualElement
         m_ScrollOffset = 0;
         m_ScrolledItemIndex = 0;
 
-        m_Value = m_ItemSourceCount > 0 ? 0 : -1;
+        m_Value = -1;
+        SetValue(0);
 
         for (int i = 0; i < m_ItemCount; i++)
         {
@@ -202,6 +204,8 @@ public partial class HorizontalCarousel : VisualElement
             m_ItemStates.Add(itemState);
 
             BindItem(itemState, i);
+
+            SetItemSelected(itemState, m_Value);
         }
 
         Debug.Log($"m_ItemCount: {m_ItemCount}");
@@ -328,6 +332,9 @@ public partial class HorizontalCarousel : VisualElement
             m_ScrollOffset = m_AnimTargetOffset;
             PositionAllItems();
             m_ScrollAnimation.Pause();
+
+            for (int i = 0; i < m_ItemCount; i++)
+                SetItemSelected(m_ItemStates[i], m_Value);
         }
     }
 
@@ -346,9 +353,6 @@ public partial class HorizontalCarousel : VisualElement
 
         m_Value = newValue;
 
-        for(int i = 0; i < m_ItemCount; i++)
-            SetItemSelected(m_ItemStates[i]);
-
         Debug.Log($"m_ScrollOffset:{m_ScrollOffset} value:{m_Value}");
 
         // TODO: イベント？
@@ -356,9 +360,9 @@ public partial class HorizontalCarousel : VisualElement
         return true;
     }
 
-    private void SetItemSelected(ItemState itemState)
+    private void SetItemSelected(ItemState itemState, int targetValue)
     {
-        if (itemState.srcIndex == m_Value)
+        if (itemState.srcIndex == targetValue)
             itemState.item.AddToClassList("is-selected");
         else
             itemState.item.RemoveFromClassList("is-selected");
