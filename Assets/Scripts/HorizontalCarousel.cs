@@ -10,6 +10,7 @@ using UnityEngine.UIElements.Experimental;
 public partial class HorizontalCarousel : VisualElement
 {
     public const string ussClassName = "horizontal-carousel";
+    public const string viewportUssClassName = ussClassName + "__viewport";
     public const string containerUssClassName = ussClassName + "__container";
 
     // 現在のスクロール位置（virtual座標）
@@ -36,6 +37,9 @@ public partial class HorizontalCarousel : VisualElement
     public int visibleItemCount { get; set; }
 
     [UxmlAttribute]
+    public int offsetItemCount { get; set; }
+
+    [UxmlAttribute]
     public float fixedItemWidth { get; set; } = 100f;
 
     [UxmlAttribute]
@@ -46,6 +50,13 @@ public partial class HorizontalCarousel : VisualElement
 
     [UxmlAttribute]
     public float maxSlide { get; set; } = 0.5f;
+
+    [UxmlAttribute]
+    public bool isCenter { get; set; } = false;
+
+    private float m_CenterOffset;
+
+    private VisualElement m_Viewport;
 
     private VisualElement m_Container;
 
@@ -121,16 +132,20 @@ public partial class HorizontalCarousel : VisualElement
     {
         AddToClassList(ussClassName);
 
-        m_Container = new VisualElement
-        {
-            name = containerUssClassName
-        };
+        m_Viewport = new VisualElement { name = viewportUssClassName };
+        m_Viewport.AddToClassList(viewportUssClassName);
+        m_Viewport.pickingMode = PickingMode.Ignore;
+        hierarchy.Add(m_Viewport);
+
+        m_Container = new VisualElement { name = containerUssClassName };
         m_Container.AddToClassList(containerUssClassName);
         // contentContainer を上書きしているので単純なAdd だと無限ループになる
-        hierarchy.Add(m_Container);
+        m_Viewport.Add(m_Container);
 
         var scrollable = new Scrollable(OnDown, OnDrag, OnUp);
         m_Container.AddManipulator(scrollable);
+
+        m_Viewport.RegisterCallback<GeometryChangedEvent>(OnViewportGeometryChanged);
     }
 
     private ItemState MakeItem()
@@ -257,6 +272,13 @@ public partial class HorizontalCarousel : VisualElement
         StartScrollAnimation(snappedOffset);
     }
 
+    private void OnViewportGeometryChanged(GeometryChangedEvent evt)
+    {
+        m_CenterOffset = m_Viewport.layout.width * 0.5f - (offsetItemCount + 0.5f) * fixedItemWidth;
+        Debug.Log($"viewportWidth: {m_Viewport.layout.width} contentWidth: {m_Container.layout.width}");
+        PositionAllItems();
+    }
+
     private void PositionAllItems()
     {
         if (m_ItemCount <= 0)
@@ -264,6 +286,9 @@ public partial class HorizontalCarousel : VisualElement
 
         var layoutOffset = Mathf.Repeat(m_ScrollOffset, m_ItemCount * fixedItemWidth);
         //Debug.Log($"m_ScrollOffset: {m_ScrollOffset}, layoutOffset: {layoutOffset}");
+
+        if (isCenter)
+            layoutOffset -= m_CenterOffset;
 
         foreach (var itemState in m_ItemStates)
         {
@@ -276,9 +301,11 @@ public partial class HorizontalCarousel : VisualElement
         m_Container.style.paddingLeft = paddingUnit * fixedItemWidth;
         //Debug.Log($"handleloop targetIndex: {targetIndex} paddingUnit: {paddingUnit}");
 
-        if (targetIndex != m_ScrolledItemIndex)
+        var targetIndexWithOffset = targetIndex - offsetItemCount;
+
+        if (targetIndexWithOffset != m_ScrolledItemIndex)
         {
-            var indexDiff = targetIndex - m_ScrolledItemIndex;
+            var indexDiff = targetIndexWithOffset - m_ScrolledItemIndex;
             //Debug.Log($"indexDiff: {indexDiff}, targetIndex: {targetIndex}, m_ScrolledItemIndex: {m_ScrolledItemIndex}");
 
             if (indexDiff > 0)
@@ -304,7 +331,7 @@ public partial class HorizontalCarousel : VisualElement
                 }
             }
 
-            m_ScrolledItemIndex = targetIndex;
+            m_ScrolledItemIndex = targetIndexWithOffset;
         }
     }
 

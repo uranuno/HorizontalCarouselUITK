@@ -1,22 +1,39 @@
-.horizontal-carousel__container {
-    flex-direction: row;
+.content {
     flex-grow: 1;
+    justify-content: center;
+}
+
+.horizontal-carousel {
+    align-items: center;
+}
+
+.horizontal-carousel__viewport {
+    max-width: 945px;
+    height: 250px;
+    border-color: rgb(51, 51, 51);
+    border-width: 0 2px;
+}
+
+.horizontal-carousel__container {
+    align-items: center;
+    /* background-color: rgb(255, 235, 4); */
 }
 
 .horizontal-carousel__item {
-    padding-right: 10px;
-    flex-shrink: 0;
+    padding: 0 5px;
 }
 
+/* debug button */
 .debug-button__container {
     flex-direction: row;
     margin-top: 10px;
+    justify-content: center;
 }
 
 .debug-button {
     margin: 0;
     margin-right: 10px;
-    flex-grow: 1;
+    font-size: 20px;
 }
 
 /* card */
