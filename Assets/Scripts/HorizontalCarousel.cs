@@ -17,6 +17,8 @@ public partial class HorizontalCarousel : VisualElement
 
     private int m_ScrolledItemIndex;
 
+    private bool m_IsDragging;
+
     private IVisualElementScheduledItem m_ScrollAnimation;
 
     private float m_AnimStartTime;
@@ -127,7 +129,7 @@ public partial class HorizontalCarousel : VisualElement
         // contentContainer を上書きしているので単純なAdd だと無限ループになる
         hierarchy.Add(m_Container);
 
-        var scrollable = new Scrollable(OnDown, OnScroll, OnUp);
+        var scrollable = new Scrollable(OnDown, OnDrag, OnUp);
         m_Container.AddManipulator(scrollable);
     }
 
@@ -213,17 +215,29 @@ public partial class HorizontalCarousel : VisualElement
 
     private void OnDown(Scrollable scrollable)
     {
-        m_ScrollAnimation?.Pause();
+        // 連打防止
+        if (m_ScrollAnimation?.isActive == true)
+            return;
+
+        m_IsDragging = true;
     }
 
-    private void OnScroll(Scrollable scrollable)
+    private void OnDrag(Scrollable scrollable)
     {
+        if (!m_IsDragging || m_ScrollAnimation?.isActive == true)
+            return;
+
         m_ScrollOffset -= scrollable.deltaPos.x;
         PositionAllItems();
     }
 
     private void OnUp(Scrollable scrollable)
     {
+        if (!m_IsDragging || m_ScrollAnimation?.isActive == true)
+            return;
+
+        m_IsDragging = false;
+
         //Debug.Log($"velocity:{scrollable.velocity}}");
 
         var additionalOffset = -scrollable.velocity.x * k_IntervalMs * swipeMultiplier;
