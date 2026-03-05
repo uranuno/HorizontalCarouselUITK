@@ -1,9 +1,12 @@
+using Unity.Properties;
 using UnityEngine;
 
 [CreateAssetMenu]
 public class CardData : ScriptableObject
 {
-    public string Label;
+    [CreateProperty]
+    public string label;
 
-    public Texture2D Image;
+    [CreateProperty]
+    public Texture2D image;
 }
