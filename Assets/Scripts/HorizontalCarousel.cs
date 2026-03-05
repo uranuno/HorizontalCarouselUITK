@@ -7,13 +7,17 @@ using UnityEngine.UIElements;
 using UnityEngine.UIElements.Experimental;
 
 [UxmlElement]
-public partial class HorizontalCarousel : VisualElement
+public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int>
 {
+    internal static readonly BindingId itemsSourceProperty = nameof(itemsSource);
+    internal static readonly BindingId valueProperty = nameof(value);
+
     public const string ussClassName = "horizontal-carousel";
     public const string viewportUssClassName = ussClassName + "__viewport";
     public const string containerUssClassName = ussClassName + "__container";
+    public const string selectedUssClassName = "is-selected";
 
-    // 現在のスクロール位置（virtual座標）
+    // 現在のスクロール位置（仮想座標）
     private float m_ScrollOffset;
 
     private int m_ScrolledItemIndex;
@@ -64,13 +68,11 @@ public partial class HorizontalCarousel : VisualElement
 
     private class ItemState
     {
-        public VisualElement item;
-
         // どのItemsSource をBind しているか（is-selected 判定に使用）
         public int srcIndex;
     }
 
-    private List<ItemState> m_ItemStates = new List<ItemState>();
+    private Dictionary<VisualElement, ItemState> m_ItemStates = new();
 
     private int m_ItemCount = 0;
 
@@ -82,6 +84,7 @@ public partial class HorizontalCarousel : VisualElement
 
     private int m_ItemSourceCount = 0;
 
+    [CreateProperty]
     public IList itemsSource
     {
         get => m_ItemsSource;
@@ -91,24 +94,41 @@ public partial class HorizontalCarousel : VisualElement
                 return;
 
             m_ItemsSource = value;
+            m_ItemSourceCount = m_ItemsSource?.Count ?? 0;
+
             Rebuild();
+
+            NotifyPropertyChanged(in itemsSourceProperty);
         }
     }
 
-    private int m_Value = -1;
+    private int m_Value;
 
+    [CreateProperty]
     public int value
     {
         get => m_Value;
         set
         {
-            if (SetValue(value))
+            var previous = m_Value;
+
+            SetValueWithoutNotify(value);
+
+            if (previous != m_Value)
             {
-                var srcWidth = m_ItemSourceCount * fixedItemWidth;
-                var currentCycle = Mathf.Floor(m_ScrollOffset / srcWidth);
-                // 現在の周を考慮して移動
-                var targetOffset = currentCycle * srcWidth + m_Value * fixedItemWidth;
-                StartScrollAnimation(targetOffset);
+                Debug.Log($"value updated! previous:{previous} value:{m_Value}");
+
+                m_ScrollAnimation?.Pause();
+
+                // 仮想座標リセット
+                m_ScrollOffset = m_Value * fixedItemWidth;
+                PositionAllItems();
+
+                // 次フレームで選択状態にする
+                UpdateItemSelected(false);
+                schedule.Execute(() => UpdateItemSelected(true));
+
+                NotifyValueChanged(previous, m_Value);
             }
         }
     }
@@ -121,11 +141,9 @@ public partial class HorizontalCarousel : VisualElement
             return;
 
         var targetOffset = m_ScrollOffset + amount * fixedItemWidth;
+        ScrollTo(targetOffset);
 
-        var targetIndex = Mathf.RoundToInt(targetOffset / fixedItemWidth);
-        SetValue(targetIndex);
-
-        StartScrollAnimation(targetOffset);
+        UpdateItemSelected(false);
     }
 
     public HorizontalCarousel()
@@ -148,7 +166,7 @@ public partial class HorizontalCarousel : VisualElement
         m_Viewport.RegisterCallback<GeometryChangedEvent>(OnViewportGeometryChanged);
     }
 
-    private ItemState MakeItem()
+    private (VisualElement, ItemState) MakeItem()
     {
         VisualElement item = null;
 
@@ -173,37 +191,38 @@ public partial class HorizontalCarousel : VisualElement
 
         var itemState = new ItemState
         {
-            item = item,
             srcIndex = -1
         };
 
-        return itemState;
+        return (item, itemState);
     }
 
-    private void BindItem(ItemState itemState, int virtualIndex)
+    private void BindItem(VisualElement item, int virtualIndex)
     {
         var srcIndex = RepeatInt(virtualIndex, m_ItemSourceCount);
 
         if (bindItem != null)
         {
-            bindItem.Invoke(itemState.item, srcIndex);
+            bindItem.Invoke(item, srcIndex);
         }
 
         // autoAssignSource フラグ要る？
-        itemState.item.dataSource = m_ItemsSource;
-        itemState.item.dataSourcePath = PropertyPath.FromIndex(srcIndex);
-        itemState.srcIndex = srcIndex;
+        item.dataSource = m_ItemsSource;
+        item.dataSourcePath = PropertyPath.FromIndex(srcIndex);
 
-        // 選択状態をクリアする
-        SetItemSelected(itemState, -1);
+        m_ItemStates[item].srcIndex = srcIndex;
+    }
+
+    private VisualElement ItemAt(int index)
+    {
+        return m_Container.ElementAt(index);
     }
 
     /// <summary>
     /// モデルが更新されたら呼ぶ
     /// </summary>
-    public void Rebuild()
+    private void Rebuild()
     {
-        m_ItemSourceCount = m_ItemsSource?.Count ?? 0;
         m_ItemCount = Mathf.Min(visibleItemCount, m_ItemSourceCount);
 
         m_ItemStates.Clear();
@@ -212,20 +231,19 @@ public partial class HorizontalCarousel : VisualElement
         m_ScrollOffset = 0;
         m_ScrolledItemIndex = 0;
 
-        m_Value = -1;
-        SetValue(0);
-
         for (int i = 0; i < m_ItemCount; i++)
         {
-            var itemState = MakeItem();
-            m_ItemStates.Add(itemState);
+            var (item, itemState) = MakeItem();
+            m_ItemStates[item] = itemState;
 
-            BindItem(itemState, i);
-
-            SetItemSelected(itemState, m_Value);
+            BindItem(item, i);
         }
 
-        Debug.Log($"m_ItemCount: {m_ItemCount}");
+        SetValueWithoutNotify(0);
+
+        UpdateItemSelected(true);
+
+        Debug.Log($"Rebuild! m_ItemCount: {m_ItemCount}");
     }
 
     private void OnDown(Scrollable scrollable)
@@ -235,6 +253,8 @@ public partial class HorizontalCarousel : VisualElement
             return;
 
         m_IsDragging = true;
+
+        UpdateItemSelected(false);
     }
 
     private void OnDrag(Scrollable scrollable)
@@ -260,22 +280,13 @@ public partial class HorizontalCarousel : VisualElement
         additionalOffset = Mathf.Clamp(additionalOffset, -max, max);
         var predictedOffset = m_ScrollOffset + additionalOffset;
 
-        // 予測位置に最も近いカードのインデックスを計算
-        var targetIndex = Mathf.RoundToInt(predictedOffset / fixedItemWidth);
-
-        Debug.Log($"m_ScrollOffset:{m_ScrollOffset} additionalOffset:{additionalOffset} targetIndex:{targetIndex}");
-
-        // value 更新
-        SetValue(targetIndex);
-
-        var snappedOffset = targetIndex * fixedItemWidth;
-        StartScrollAnimation(snappedOffset);
+        ScrollTo(predictedOffset);
     }
 
     private void OnViewportGeometryChanged(GeometryChangedEvent evt)
     {
         m_CenterOffset = m_Viewport.layout.width * 0.5f - (offsetItemCount + 0.5f) * fixedItemWidth;
-        Debug.Log($"viewportWidth: {m_Viewport.layout.width} contentWidth: {m_Container.layout.width}");
+        //Debug.Log($"viewportWidth: {m_Viewport.layout.width} contentWidth: {m_Container.layout.width}");
         PositionAllItems();
     }
 
@@ -285,14 +296,14 @@ public partial class HorizontalCarousel : VisualElement
             return;
 
         var layoutOffset = Mathf.Repeat(m_ScrollOffset, m_ItemCount * fixedItemWidth);
-        //Debug.Log($"m_ScrollOffset: {m_ScrollOffset}, layoutOffset: {layoutOffset}");
+        //Debug.Log($"PositionAllItems m_ScrollOffset: {m_ScrollOffset}, layoutOffset: {layoutOffset}");
 
         if (isCenter)
             layoutOffset -= m_CenterOffset;
 
-        foreach (var itemState in m_ItemStates)
+        foreach (var item in m_ItemStates.Keys)
         {
-            itemState.item.style.translate = new Translate(-layoutOffset, 0);
+            item.style.translate = new Translate(-layoutOffset, 0);
         }
 
         var targetIndex = Mathf.FloorToInt(m_ScrollOffset / fixedItemWidth);
@@ -306,33 +317,64 @@ public partial class HorizontalCarousel : VisualElement
         if (targetIndexWithOffset != m_ScrolledItemIndex)
         {
             var indexDiff = targetIndexWithOffset - m_ScrolledItemIndex;
-            //Debug.Log($"indexDiff: {indexDiff}, targetIndex: {targetIndex}, m_ScrolledItemIndex: {m_ScrolledItemIndex}");
 
-            if (indexDiff > 0)
+            if (Mathf.Abs(indexDiff) >= m_ItemCount)
+            {
+                Debug.Log($"indexDiff: {indexDiff}, targetIndex: {targetIndex}, m_ScrolledItemIndex: {m_ScrolledItemIndex}, m_ScrollOffset: {m_ScrollOffset}");
+
+                // 全件バインドし直し（順序維持のため BringToFront/SendToBack は不要）
+                // ツリー上の順序はそのままに、各スロットへ正しい virtualIndex をバインド
+                for (int i = 0; i < m_ItemCount; i++)
+                {
+                    var virtualIndex = targetIndexWithOffset + i;
+                    BindItem(ItemAt(i), virtualIndex);
+                }
+            }
+            else if (indexDiff > 0)
             {
                 for (int i = 0; i < indexDiff; i++)
                 {
-                    var itemIndex = RepeatInt(m_ScrolledItemIndex + i, m_ItemCount);
-                    m_ItemStates[itemIndex].item.BringToFront();
+                    var item = ItemAt(0);
+                    item.BringToFront();
 
                     var nextVirtualIndex = m_ScrolledItemIndex + m_ItemCount + i;
-                    BindItem(m_ItemStates[itemIndex], nextVirtualIndex);
+                    BindItem(item, nextVirtualIndex);
                 }
             }
             else
             {
                 for (int i = 0; i < -indexDiff; i++)
                 {
-                    var itemIndex = RepeatInt(m_ScrolledItemIndex + m_ItemCount - 1 - i, m_ItemCount);
-                    m_ItemStates[itemIndex].item.SendToBack();
+                    var item = ItemAt(m_ItemCount - 1);
+                    item.SendToBack();
 
                     var nextVirtualIndex = m_ScrolledItemIndex - 1 - i;
-                    BindItem(m_ItemStates[itemIndex], nextVirtualIndex);
+                    BindItem(item, nextVirtualIndex);
                 }
             }
 
             m_ScrolledItemIndex = targetIndexWithOffset;
         }
+    }
+
+    // 仮想座標指定でのスクロール
+    // value の更新、アニメーションも含む
+    private void ScrollTo(float targetOffset)
+    {
+        // アイテム単位の位置に丸める
+        var targetIndex = Mathf.RoundToInt(targetOffset / fixedItemWidth);
+
+        // value更新
+        var previous = m_Value;
+        SetValueWithoutNotify(targetIndex);
+
+        var snappedOffset = targetIndex * fixedItemWidth;
+        // アニメ後に選択状態の更新が呼ばれる
+        StartScrollAnimation(snappedOffset);
+
+        // イベント
+        if (previous != m_Value)
+            NotifyValueChanged(previous, m_Value);
     }
 
     private void StartScrollAnimation(float targetOffset)
@@ -361,52 +403,53 @@ public partial class HorizontalCarousel : VisualElement
     private void ScrollAnimation()
     {
         var elapsed = Time.unscaledTime - m_AnimStartTime;
-
         var t = Mathf.Clamp01(elapsed / m_AnimDuration);
-        var easedT = Easing.OutCubic(t);
 
-        m_ScrollOffset = Mathf.Lerp(m_AnimStartOffset, m_AnimTargetOffset, easedT);
-        PositionAllItems();
-
-        if (t >= 1f)
+        if (t < 1)
+        {
+            var easedT = Easing.OutCubic(t);
+            m_ScrollOffset = Mathf.Lerp(m_AnimStartOffset, m_AnimTargetOffset, easedT);
+            PositionAllItems();
+        }
+        else
         {
             m_ScrollOffset = m_AnimTargetOffset;
             PositionAllItems();
+
+            UpdateItemSelected(true);
+
             m_ScrollAnimation.Pause();
-
-            for (int i = 0; i < m_ItemCount; i++)
-                SetItemSelected(m_ItemStates[i], m_Value);
         }
     }
 
-    private bool SetValue(int newValue)
+    public void SetValueWithoutNotify(int newValue)
     {
-        if (m_ItemSourceCount <= 0)
+        m_Value = m_ItemSourceCount > 0 ?
+            RepeatInt(newValue, m_ItemSourceCount) : -1;
+
+        //Debug.Log($"SetValueWithoutNotify m_ItemSourceCount:{m_ItemSourceCount} value:{m_Value}");
+    }
+
+    private void NotifyValueChanged(int previousValue, int newValue)
+    {
+        using (var evt = ChangeEvent<int>.GetPooled(previousValue, newValue))
         {
-            m_Value = -1;
-            return false;
+            evt.target = this;
+            SendEvent(evt);
         }
 
-        newValue = RepeatInt(newValue, m_ItemSourceCount);
-
-        if (newValue == m_Value)
-            return false;
-
-        m_Value = newValue;
-
-        Debug.Log($"m_ScrollOffset:{m_ScrollOffset} value:{m_Value}");
-
-        // TODO: イベント？
-
-        return true;
+        NotifyPropertyChanged(in valueProperty);
     }
 
-    private void SetItemSelected(ItemState itemState, int targetValue)
+    private void UpdateItemSelected(bool selected)
     {
-        if (itemState.srcIndex == targetValue)
-            itemState.item.AddToClassList("is-selected");
-        else
-            itemState.item.RemoveFromClassList("is-selected");
+        foreach (var (item, itemState) in m_ItemStates)
+        {
+            if (selected && itemState.srcIndex == m_Value)
+                item.AddToClassList(selectedUssClassName);
+            else
+                item.RemoveFromClassList(selectedUssClassName);
+        }
     }
 
     // Mathf.Repeat のint版が無いので作成

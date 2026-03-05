@@ -9,48 +9,22 @@ public class HorizontalCarouselExample : MonoBehaviour
 
     [SerializeField]
     private VisualTreeAsset m_ItemTemplate;
+
     void OnEnable()
     {
         var root = GetComponent<UIDocument>().rootVisualElement;
 
-        var horizontalCarousel = root.Q<HorizontalCarousel>();
-
-        horizontalCarousel.itemsSource = m_CardDatas;
-
-        // デバッグボタン
-        var scrollButtons = root.Q("button-scroll").Query<Button>();
-        scrollButtons.ForEach(button =>
+        root.Query("group").ForEach(group =>
         {
-            button.clicked += () =>
+            var horizontalCarousel = group.Q<HorizontalCarousel>();
+
+            group.Q<Button>("prev").clicked += () =>
             {
-                var str = button.text;
-                try
-                {
-                    var scrollAmount = int.Parse(str);
-                    horizontalCarousel.ScrollBy(scrollAmount);
-                }
-                catch (FormatException e)
-                {
-                    Debug.LogException(e);
-                }
+                horizontalCarousel.ScrollBy(-1);
             };
-        });
-
-        var valueButtons = root.Q("button-value").Query<Button>();
-        valueButtons.ForEach(button =>
-        {
-            button.clicked += () =>
+            group.Q<Button>("next").clicked += () =>
             {
-                var str = button.text;
-                try
-                {
-                    var targetValue = int.Parse(str);
-                    horizontalCarousel.value = targetValue;
-                }
-                catch (FormatException e)
-                {
-                    Debug.LogException(e);
-                }
+                horizontalCarousel.ScrollBy(1);
             };
         });
     }

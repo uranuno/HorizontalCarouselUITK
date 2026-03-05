@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b441e6091440fe42b297f9c34e33e05, type: 3}
+  m_Name: Data2
+  m_EditorClassIdentifier: Assembly-CSharp::HorizontalCarouselExampleData
+  m_Cards:
+  - {fileID: 11400000, guid: 3f4bc9ee14c5c8b4a8ddce223ae02c30, type: 2}
+  - {fileID: 11400000, guid: ec04b6d4b7b568849a74aaaecde49bbd, type: 2}
+  - {fileID: 11400000, guid: 4fdd1f5f5a7394744a913b1759e25862, type: 2}
+  - {fileID: 11400000, guid: fafd3210af587e6479237f0707c71ff1, type: 2}
+  - {fileID: 11400000, guid: c208278486b93d640a1e6e4c785a8ef7, type: 2}
+  - {fileID: 11400000, guid: 1deaf56f7fc484f488ffedad057793b7, type: 2}
+  - {fileID: 11400000, guid: 55ae44996b7e1774da8d8c12c176cece, type: 2}
+  - {fileID: 11400000, guid: 43747804ea93a424796e659f97512282, type: 2}
+  - {fileID: 11400000, guid: 08f1c61c8cca28245af5f8b1ab508aa5, type: 2}
+  - {fileID: 11400000, guid: 485d3d65d3324d742847ff0f1f025904, type: 2}
+  m_Selected: 0

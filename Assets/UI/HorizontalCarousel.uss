@@ -10,3 +10,7 @@
 .horizontal-carousel__item {
     flex-shrink: 0;
 }
+
+.horizontal-carousel-indicator .unity-group-box {
+    flex-direction: row;
+}

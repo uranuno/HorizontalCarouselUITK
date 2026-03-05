@@ -1,24 +1,40 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:Template name="CardItem" src="project://database/Assets/UI/CardItem.uxml?fileID=9197481963319205126&amp;guid=2ff57b4c62e43bf4ea3fb534e70b93b8&amp;type=3#CardItem"/>
     <ui:VisualElement name="content" class="content">
-        <HorizontalCarousel visible-item-count="6" offset-item-count="2" fixed-item-width="210" is-center="true" item-template="project://database/Assets/UI/CardItem.uxml?fileID=9197481963319205126&amp;guid=2ff57b4c62e43bf4ea3fb534e70b93b8&amp;type=3#CardItem">
-            <ui:Instance template="CardItem" class="horizontal-carousel__item"/>
-            <ui:Instance template="CardItem" class="horizontal-carousel__item"/>
-            <ui:Instance template="CardItem" class="horizontal-carousel__item"/>
-        </HorizontalCarousel>
-        <ui:VisualElement name="button-scroll" class="debug-button__container">
-            <ui:Button text="-2" class="debug-button"/>
-            <ui:Button text="-1" class="debug-button"/>
-            <ui:Button text="+1" class="debug-button"/>
-            <ui:Button text="+2" class="debug-button"/>
+        <ui:VisualElement name="group" class="group" data-source="project://database/Assets/Resources/Data1.asset?fileID=11400000&amp;guid=55adef2995522f64ab1a5a4db41b4bed&amp;type=2#Data1">
+            <HorizontalCarousel visible-item-count="6" offset-item-count="2" fixed-item-width="230" is-center="true" item-template="project://database/Assets/UI/CardItem.uxml?fileID=9197481963319205126&amp;guid=2ff57b4c62e43bf4ea3fb534e70b93b8&amp;type=3#CardItem" value="5">
+                <Bindings>
+                    <ui:DataBinding property="itemsSource" data-source-path="cards" binding-mode="ToTargetOnce"/>
+                    <ui:DataBinding property="value" data-source-path="selected" binding-mode="TwoWay"/>
+                </Bindings>
+            </HorizontalCarousel>
+            <ui:VisualElement name="buttons" class="group-row">
+                <ui:Button name="prev" text="&lt;"/>
+                <HorizontalCarouselIndicator>
+                    <Bindings>
+                        <ui:DataBinding property="count" data-source-path="count" binding-mode="ToTargetOnce"/>
+                        <ui:DataBinding property="value" data-source-path="selected" binding-mode="TwoWay"/>
+                    </Bindings>
+                </HorizontalCarouselIndicator>
+                <ui:Button name="next" text="&gt;"/>
+            </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="button-value" class="debug-button__container">
-            <ui:Button text="0" class="debug-button"/>
-            <ui:Button text="1" class="debug-button"/>
-            <ui:Button text="2" class="debug-button"/>
-            <ui:Button text="3" class="debug-button"/>
-            <ui:Button text="4" class="debug-button"/>
-            <ui:Button text="5" class="debug-button"/>
+        <ui:VisualElement name="group" class="group" data-source="project://database/Assets/Resources/Data2.asset?fileID=11400000&amp;guid=2624d408f1b43d04294ee9497949965e&amp;type=2#Data2">
+            <HorizontalCarousel visible-item-count="6" offset-item-count="2" fixed-item-width="230" is-center="true" item-template="project://database/Assets/UI/CardItem.uxml?fileID=9197481963319205126&amp;guid=2ff57b4c62e43bf4ea3fb534e70b93b8&amp;type=3#CardItem" value="5">
+                <Bindings>
+                    <ui:DataBinding property="itemsSource" data-source-path="cards" binding-mode="ToTargetOnce"/>
+                    <ui:DataBinding property="value" data-source-path="selected" binding-mode="TwoWay"/>
+                </Bindings>
+            </HorizontalCarousel>
+            <ui:VisualElement name="buttons" class="group-row">
+                <ui:Button name="prev" text="&lt;"/>
+                <HorizontalCarouselIndicator>
+                    <Bindings>
+                        <ui:DataBinding property="count" data-source-path="count" binding-mode="ToTargetOnce"/>
+                        <ui:DataBinding property="value" data-source-path="selected" binding-mode="TwoWay"/>
+                    </Bindings>
+                </HorizontalCarouselIndicator>
+                <ui:Button name="next" text="&gt;"/>
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
