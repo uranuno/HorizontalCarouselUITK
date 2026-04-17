@@ -42,7 +42,7 @@ public partial class HorizontalCarouselIndicator : VisualElement, INotifyValueCh
 
             if (previous != m_Value)
             {
-                Debug.Log($"Indicator.value updated! previous: {previous} m_Value: {m_Value}");
+                //Debug.Log($"Indicator.value updated! previous: {previous} m_Value: {m_Value}");
 
                 using (var evt = ChangeEvent<int>.GetPooled(previous, m_Value))
                 {

@@ -20,8 +20,6 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
     // 現在のスクロール位置（仮想座標）
     private float m_ScrollOffset;
 
-    private int m_ScrolledItemIndex;
-
     private bool m_IsDragging;
 
     private IVisualElementScheduledItem m_ScrollAnimation;
@@ -56,7 +54,13 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
     public float maxSlide { get; set; } = 0.5f;
 
     [UxmlAttribute]
-    public bool isCenter { get; set; } = false;
+    public bool center { get; set; } = false; // 中央寄せ
+
+    [UxmlAttribute]
+    public bool loop { get; set; } = true; // falseにすると端で止まる
+
+    [UxmlAttribute]
+    public float elasticity { get; set; } = 0.2f;
 
     private float m_CenterOffset;
 
@@ -68,6 +72,9 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
 
     private class ItemState
     {
+        // 仮想index（loop:false時に範囲外を隠すのに使用）
+        public int virtualIndex;
+
         // どのItemsSource をBind しているか（is-selected 判定に使用）
         public int srcIndex;
     }
@@ -191,16 +198,33 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
 
         var itemState = new ItemState
         {
+            virtualIndex = 0,
             srcIndex = -1
         };
 
         return (item, itemState);
     }
 
-    private void BindItem(VisualElement item, int virtualIndex)
+    private void UpdateItem(VisualElement item, int virtualIndex)
     {
-        var srcIndex = RepeatInt(virtualIndex, m_ItemSourceCount);
+        item.visible = loop //loop時は常に見える
+            || (virtualIndex >= 0 && virtualIndex < m_ItemSourceCount);
 
+        // 見えるときだけバインドを更新する
+        if (item.visible)
+        {
+            var srcIndex = RepeatInt(virtualIndex, m_ItemSourceCount);
+            BindItem(item, srcIndex);
+
+            m_ItemStates[item].srcIndex = srcIndex;
+        }
+
+        //Debug.Log($"UpdateItem old:{m_ItemStates[item].virtualIndex} new:{virtualIndex} item.visible:{item.visible}");
+        m_ItemStates[item].virtualIndex = virtualIndex;
+    }
+
+    private void BindItem(VisualElement item, int srcIndex)
+    {
         if (bindItem != null)
         {
             bindItem.Invoke(item, srcIndex);
@@ -209,8 +233,6 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
         // autoAssignSource フラグ要る？
         item.dataSource = m_ItemsSource;
         item.dataSourcePath = PropertyPath.FromIndex(srcIndex);
-
-        m_ItemStates[item].srcIndex = srcIndex;
     }
 
     private VisualElement ItemAt(int index)
@@ -218,9 +240,7 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
         return m_Container.ElementAt(index);
     }
 
-    /// <summary>
-    /// モデルが更新されたら呼ぶ
-    /// </summary>
+    // モデルが更新されたら呼ぶ
     private void Rebuild()
     {
         m_ItemCount = Mathf.Min(visibleItemCount, m_ItemSourceCount);
@@ -229,14 +249,13 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
         m_Container.Clear();
 
         m_ScrollOffset = 0;
-        m_ScrolledItemIndex = 0;
 
         for (int i = 0; i < m_ItemCount; i++)
         {
             var (item, itemState) = MakeItem();
             m_ItemStates[item] = itemState;
 
-            BindItem(item, i);
+            UpdateItem(item, i);
         }
 
         SetValueWithoutNotify(0);
@@ -262,7 +281,17 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
         if (!m_IsDragging || m_ScrollAnimation?.isActive == true)
             return;
 
-        m_ScrollOffset -= scrollable.deltaPos.x;
+        var delta = scrollable.deltaPos.x;
+        if(!loop)
+        {
+            var endScrollOffset = (m_ItemSourceCount - 1) * fixedItemWidth;
+            if (m_ScrollOffset < 0 || m_ScrollOffset > endScrollOffset)
+            {
+                delta *= elasticity; // 範囲外では%分だけ反映
+            }
+        }
+
+        m_ScrollOffset -= delta;
         PositionAllItems();
     }
 
@@ -286,7 +315,7 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
     private void OnViewportGeometryChanged(GeometryChangedEvent evt)
     {
         m_CenterOffset = m_Viewport.layout.width * 0.5f - (offsetItemCount + 0.5f) * fixedItemWidth;
-        //Debug.Log($"viewportWidth: {m_Viewport.layout.width} contentWidth: {m_Container.layout.width}");
+        //Debug.Log($"m_CenterOffset: {m_CenterOffset}");
         PositionAllItems();
     }
 
@@ -295,39 +324,65 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
         if (m_ItemCount <= 0)
             return;
 
-        var layoutOffset = Mathf.Repeat(m_ScrollOffset, m_ItemCount * fixedItemWidth);
+        var headIndex = Mathf.FloorToInt(m_ScrollOffset / fixedItemWidth);
+
+        var endHeadIndex = m_ItemSourceCount - 1;
+        var endScrollOffset = endHeadIndex * fixedItemWidth;
+
+        if (!loop)
+            headIndex = Mathf.Clamp(headIndex, 0, endHeadIndex);
+
+        float layoutOffset;
+        int paddingUnit;
+
+        if (!loop && m_ScrollOffset < 0)
+        {
+            layoutOffset = m_ScrollOffset;
+            paddingUnit = 0;
+        }
+        else if (!loop && m_ScrollOffset > endScrollOffset)
+        {
+            paddingUnit = RepeatInt(endHeadIndex, m_ItemCount);
+
+            var endLayoutOffset = paddingUnit * fixedItemWidth;
+            var overScroll = m_ScrollOffset - endScrollOffset;
+            layoutOffset = endLayoutOffset + overScroll;
+        }
+        else
+        {
+            layoutOffset = Mathf.Repeat(m_ScrollOffset, m_ItemCount * fixedItemWidth);
+            paddingUnit = RepeatInt(headIndex, m_ItemCount);
+        }
+
         //Debug.Log($"PositionAllItems m_ScrollOffset: {m_ScrollOffset}, layoutOffset: {layoutOffset}");
 
-        if (isCenter)
+        if (center)
             layoutOffset -= m_CenterOffset;
 
         foreach (var item in m_ItemStates.Keys)
         {
             item.style.translate = new Translate(-layoutOffset, 0);
         }
-
-        var targetIndex = Mathf.FloorToInt(m_ScrollOffset / fixedItemWidth);
-
-        var paddingUnit = RepeatInt(targetIndex, m_ItemCount);
         m_Container.style.paddingLeft = paddingUnit * fixedItemWidth;
-        //Debug.Log($"handleloop targetIndex: {targetIndex} paddingUnit: {paddingUnit}");
 
-        var targetIndexWithOffset = targetIndex - offsetItemCount;
+        //Debug.Log($"PositionAllItems m_ScrollOffset:{m_ScrollOffset} layoutOffset:{layoutOffset} targetIndex:{targetIndex} paddingUnit:{paddingUnit}");
 
-        if (targetIndexWithOffset != m_ScrolledItemIndex)
+        var headIndexWithOffset = headIndex - offsetItemCount;
+        var headItemIndex = m_ItemStates[ItemAt(0)].virtualIndex;
+        if (headIndexWithOffset != headItemIndex)
         {
-            var indexDiff = targetIndexWithOffset - m_ScrolledItemIndex;
+            var indexDiff = headIndexWithOffset - headItemIndex;
 
             if (Mathf.Abs(indexDiff) >= m_ItemCount)
             {
-                Debug.Log($"indexDiff: {indexDiff}, targetIndex: {targetIndex}, m_ScrolledItemIndex: {m_ScrolledItemIndex}, m_ScrollOffset: {m_ScrollOffset}");
+                //Debug.Log($"indexDiff: {indexDiff}, targetIndex: {headIndex}, headItemIndex: {headItemIndex}, m_ScrollOffset: {m_ScrollOffset}");
 
                 // 全件バインドし直し（順序維持のため BringToFront/SendToBack は不要）
                 // ツリー上の順序はそのままに、各スロットへ正しい virtualIndex をバインド
                 for (int i = 0; i < m_ItemCount; i++)
                 {
-                    var virtualIndex = targetIndexWithOffset + i;
-                    BindItem(ItemAt(i), virtualIndex);
+                    var virtualIndex = headIndexWithOffset + i;
+                    UpdateItem(ItemAt(i), virtualIndex);
                 }
             }
             else if (indexDiff > 0)
@@ -337,8 +392,8 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
                     var item = ItemAt(0);
                     item.BringToFront();
 
-                    var nextVirtualIndex = m_ScrolledItemIndex + m_ItemCount + i;
-                    BindItem(item, nextVirtualIndex);
+                    var newVirtualIndex = headItemIndex + m_ItemCount + i;
+                    UpdateItem(item, newVirtualIndex);
                 }
             }
             else
@@ -348,12 +403,12 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
                     var item = ItemAt(m_ItemCount - 1);
                     item.SendToBack();
 
-                    var nextVirtualIndex = m_ScrolledItemIndex - 1 - i;
-                    BindItem(item, nextVirtualIndex);
+                    var newVirtualIndex = headItemIndex - 1 - i;
+                    UpdateItem(item, newVirtualIndex);
                 }
             }
 
-            m_ScrolledItemIndex = targetIndexWithOffset;
+            //Debug.Log($"HeadItemIndex old:{headItemIndex} new:{headIndexWithOffset}");
         }
     }
 
@@ -363,6 +418,9 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
     {
         // アイテム単位の位置に丸める
         var targetIndex = Mathf.RoundToInt(targetOffset / fixedItemWidth);
+
+        if (!loop)
+            targetIndex = Mathf.Clamp(targetIndex, 0, m_ItemSourceCount - 1);
 
         // value更新
         var previous = m_Value;
