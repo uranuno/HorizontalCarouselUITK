@@ -32,7 +32,7 @@ ScriptedImporter:
   textureSize: 256
   textureWidth: 256
   textureHeight: 256
-  wrapMode: 0
+  wrapMode: 1
   filterMode: 1
   sampleCount: 1
   preserveSVGImageAspect: 0
