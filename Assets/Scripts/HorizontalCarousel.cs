@@ -100,6 +100,7 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
 
             m_ItemsSource = value;
             m_ItemSourceCount = m_ItemsSource?.Count ?? 0;
+            m_Value = -1; //value のセットも別途呼ぶこと
 
             Rebuild();
 
@@ -137,6 +138,10 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
             }
         }
     }
+
+    public bool canGoToNext => loop || (value < m_ItemSourceCount - 1 && value >= 0);
+
+    public bool canGoToPrevious => loop || (value > 0);
 
     // 相対量でのスクロール
     public void ScrollBy(int amount)
@@ -255,10 +260,6 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
 
             UpdateItem(item, i);
         }
-
-        SetValueWithoutNotify(0);
-
-        UpdateItemSelected(true);
 
         Debug.Log($"Rebuild! m_ItemCount: {m_ItemCount}");
     }

@@ -17,15 +17,23 @@ public class HorizontalCarouselExample : MonoBehaviour
         root.Query("group").ForEach(group =>
         {
             var horizontalCarousel = group.Q<HorizontalCarousel>();
+            var prevButton = group.Q<Button>("prev");
+            var nextButton = group.Q<Button>("next");
 
-            group.Q<Button>("prev").clicked += () =>
+            prevButton.clicked += () =>
             {
                 horizontalCarousel.ScrollBy(-1);
             };
-            group.Q<Button>("next").clicked += () =>
+            nextButton.clicked += () =>
             {
                 horizontalCarousel.ScrollBy(1);
             };
+
+            horizontalCarousel.RegisterValueChangedCallback(evt =>
+            {
+                prevButton.SetEnabled(horizontalCarousel.canGoToPrevious);
+                nextButton.SetEnabled(horizontalCarousel.canGoToNext);
+            });
         });
     }
 }

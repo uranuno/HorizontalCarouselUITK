@@ -17,7 +17,7 @@ public class HorizontalCarouselExampleData : ScriptableObject, INotifyBindablePr
     public List<CardData> cards => m_Cards;
 
     [CreateProperty(ReadOnly = true)]
-    public int count => m_Cards.Count;
+    public int count => m_Cards?.Count ?? 0;
 
     [SerializeField]
     private int m_Selected;
@@ -30,6 +30,8 @@ public class HorizontalCarouselExampleData : ScriptableObject, INotifyBindablePr
         {
             if(m_Selected == value)
                 return;
+
+            //Debug.Log($"Example Data updated! previous: {m_Selected} m_Value: {value}");
 
             m_Selected = value;
             Notify();

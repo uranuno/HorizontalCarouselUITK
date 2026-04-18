@@ -24,6 +24,8 @@ public partial class HorizontalCarouselIndicator : VisualElement, INotifyValueCh
             if (value == m_DotGroup.childCount)
                 return;
 
+            m_Value = -1; //value のセットも別途呼ぶこと
+
             Rebuild(value);
 
             NotifyPropertyChanged(in countProperty);
@@ -73,8 +75,6 @@ public partial class HorizontalCarouselIndicator : VisualElement, INotifyValueCh
             dot.RegisterValueChangedCallback(OnDotValueChanged);
             m_DotGroup.Add(dot);
         }
-
-        SetValueWithoutNotify(0);
     }
 
     private void OnDotValueChanged(ChangeEvent<bool> evt)
