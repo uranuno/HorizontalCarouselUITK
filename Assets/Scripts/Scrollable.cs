@@ -49,6 +49,10 @@ public class Scrollable : Manipulator
 
     private void OnPointerDown(PointerDownEvent evt)
     {
+        // マルチタッチ防止
+        if (m_IsDown)
+            return;
+
         m_IsDown = true;
         m_LastPos = evt.position;
         m_LastTimestamp = evt.timestamp;
