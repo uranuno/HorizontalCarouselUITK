@@ -13,4 +13,6 @@ MonoBehaviour:
   m_Name: Card1
   m_EditorClassIdentifier: 
   label: Card1
-  image: {fileID: 2800000, guid: 8982d24a0db9c554d8e342854ab4b257, type: 3}
+  image: {fileID: 6192944022281365145, guid: a4995d03d6e3249469ec22ded5ca4213, type: 3}
+  materialDefinition:
+    m_Material: {fileID: 2100000, guid: 5a0e7dfe478ba6b478e0b6053044ded8, type: 2}

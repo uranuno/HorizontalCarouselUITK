@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: Data1
   m_EditorClassIdentifier: Assembly-CSharp::HorizontalCarouselExampleData
   m_Cards:
-  - {fileID: 11400000, guid: 3f4bc9ee14c5c8b4a8ddce223ae02c30, type: 2}
   - {fileID: 11400000, guid: ec04b6d4b7b568849a74aaaecde49bbd, type: 2}
   - {fileID: 11400000, guid: 4fdd1f5f5a7394744a913b1759e25862, type: 2}
   - {fileID: 11400000, guid: fafd3210af587e6479237f0707c71ff1, type: 2}

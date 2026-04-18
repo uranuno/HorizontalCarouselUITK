@@ -1,0 +1,9 @@
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg version="1.1" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="8">
+    <rect x="28" y="28" width="200" height="200" ry="20"/>
+  </g>
+  <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="10">
+    <path d="m153 139c-8 0.06-18-0.4-26-1-8-1-15-2-23-4 3-10 8-19 14-26 3-3 6-6 8-9 2-1 4-0.6 4 2 0.6 9 1 19 1 27-0.6 11-1 21-3 32"/>
+  </g>
+</svg>

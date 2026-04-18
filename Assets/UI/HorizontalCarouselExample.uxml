@@ -1,39 +1,56 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="HorizontalCarouselExample.uss"/>
     <ui:VisualElement name="content" class="content">
-        <ui:VisualElement name="group" class="group" data-source="project://database/Assets/Resources/Data1.asset?fileID=11400000&amp;guid=55adef2995522f64ab1a5a4db41b4bed&amp;type=2#Data1">
-            <HorizontalCarousel visible-item-count="6" offset-item-count="2" fixed-item-width="230" center="true" item-template="project://database/Assets/UI/CardItem.uxml?fileID=9197481963319205126&amp;guid=2ff57b4c62e43bf4ea3fb534e70b93b8&amp;type=3#CardItem">
-                <Bindings>
-                    <ui:DataBinding property="itemsSource" data-source-path="cards" binding-mode="ToTargetOnce"/>
-                    <ui:DataBinding property="value" data-source-path="selected" binding-mode="TwoWay"/>
-                </Bindings>
-            </HorizontalCarousel>
-            <ui:VisualElement name="buttons" class="group-row">
-                <ui:Button name="prev" text="&lt;"/>
+        <ui:VisualElement name="group" data-source="/Assets/Resources/Data1.asset" class="group">
+            <ui:VisualElement name="carousel" class="group--row">
+                <ui:Button name="prev">
+                    <ui:Image class="button__arrow"/>
+                </ui:Button>
+                <HorizontalCarousel visible-item-count="6" offset-item-count="2" fixed-item-width="200" center="true" item-template="CardItem.uxml">
+                    <Bindings>
+                        <ui:DataBinding property="itemsSource" data-source-path="cards" binding-mode="ToTargetOnce"/>
+                        <ui:DataBinding property="value" data-source-path="selected" binding-mode="TwoWay"/>
+                    </Bindings>
+                    <ui:Image name="line" class="horizontal-carousel__line line--left"/>
+                    <ui:Image name="line" class="horizontal-carousel__line line--right"/>
+                </HorizontalCarousel>
+                <ui:Button name="next" class="flip">
+                    <ui:Image class="button__arrow"/>
+                </ui:Button>
+            </ui:VisualElement>
+            <ui:VisualElement name="indicator" class="group--row">
                 <HorizontalCarouselIndicator>
                     <Bindings>
                         <ui:DataBinding property="count" data-source-path="count" binding-mode="ToTargetOnce"/>
                         <ui:DataBinding property="value" data-source-path="selected" binding-mode="TwoWay"/>
                     </Bindings>
                 </HorizontalCarouselIndicator>
-                <ui:Button name="next" text="&gt;"/>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="group" class="group" data-source="project://database/Assets/Resources/Data2.asset?fileID=11400000&amp;guid=2624d408f1b43d04294ee9497949965e&amp;type=2#Data2">
-            <HorizontalCarousel visible-item-count="6" offset-item-count="2" fixed-item-width="230" center="true" loop="false" item-template="project://database/Assets/UI/CardItem.uxml?fileID=9197481963319205126&amp;guid=2ff57b4c62e43bf4ea3fb534e70b93b8&amp;type=3#CardItem">
-                <Bindings>
-                    <ui:DataBinding property="itemsSource" data-source-path="cards" binding-mode="ToTargetOnce"/>
-                    <ui:DataBinding property="value" data-source-path="selected" binding-mode="TwoWay"/>
-                </Bindings>
-            </HorizontalCarousel>
-            <ui:VisualElement name="buttons" class="group-row">
-                <ui:Button name="prev" text="&lt;"/>
+        <ui:VisualElement name="group" data-source="/Assets/Resources/Data2.asset" class="group">
+            <ui:VisualElement name="carousel" class="group--row">
+                <ui:Button name="prev">
+                    <ui:Image class="button__arrow"/>
+                </ui:Button>
+                <HorizontalCarousel visible-item-count="6" offset-item-count="2" fixed-item-width="200" center="true" loop="false" item-template="CardItem.uxml">
+                    <Bindings>
+                        <ui:DataBinding property="itemsSource" data-source-path="cards" binding-mode="ToTargetOnce"/>
+                        <ui:DataBinding property="value" data-source-path="selected" binding-mode="TwoWay"/>
+                    </Bindings>
+                    <ui:Image name="line" class="horizontal-carousel__line line--left"/>
+                    <ui:Image name="line" class="horizontal-carousel__line line--right"/>
+                </HorizontalCarousel>
+                <ui:Button name="next" class="flip">
+                    <ui:Image class="button__arrow"/>
+                </ui:Button>
+            </ui:VisualElement>
+            <ui:VisualElement name="indicator" class="group--row">
                 <HorizontalCarouselIndicator>
                     <Bindings>
                         <ui:DataBinding property="count" data-source-path="count" binding-mode="ToTargetOnce"/>
                         <ui:DataBinding property="value" data-source-path="selected" binding-mode="TwoWay"/>
                     </Bindings>
                 </HorizontalCarouselIndicator>
-                <ui:Button name="next" text="&gt;"/>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

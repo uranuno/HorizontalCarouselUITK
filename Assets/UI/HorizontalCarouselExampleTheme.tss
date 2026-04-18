@@ -1,7 +1,7 @@
 @import url("unity-theme://default");
 
 @import url("HorizontalCarousel.uss");
-@import url("HorizontalCarouselExample.uss");
+
 
 
 

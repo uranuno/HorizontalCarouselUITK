@@ -1,0 +1,42 @@
+.card {
+    width: 192px;
+    height: 192px;
+    margin: 4px;
+    align-items: center;
+    justify-content: center;
+    scale: 1;
+    transition: scale ease-out 50ms;
+}
+
+.card__fill {
+    position: absolute;
+    background-color: black;
+    width: 150px;
+    height: 150px;
+    border-radius: 15px;
+}
+
+.card__number {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.is-selected .card__number {
+    -unity-material: url("../Shaders/Wobbly.mat");
+}
+
+.is-selected .card {
+    scale: 1.125;
+    transition: scale ease-out-back 200ms;
+}
+
+.for-selected,
+.is-selected .for-normal {
+    display: none;
+}
+
+.for-normal,
+.is-selected .for-selected {
+    display: flex;
+}

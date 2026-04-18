@@ -68,8 +68,6 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
 
     private VisualElement m_Container;
 
-    public override VisualElement contentContainer => m_Container;
-
     private class ItemState
     {
         // 仮想index（loop:false時に範囲外を隠すのに使用）

@@ -1,5 +1,6 @@
 .horizontal-carousel__viewport {
     overflow: hidden;
+    flex-grow: 1;
 }
 
 .horizontal-carousel__container {

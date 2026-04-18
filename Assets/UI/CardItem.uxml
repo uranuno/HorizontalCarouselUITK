@@ -1,14 +1,19 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:VisualElement name="card" data-source-type="CardData, Assembly-CSharp" class="card">
-        <ui:VisualElement name="card-image" class="card-image" style="background-image: resource(&quot;Numbers/number_0&quot;);">
+    <Style src="CardItem.uss"/>
+    <ui:VisualElement name="card" class="card">
+        <ui:VisualElement name="fill" class="card__fill for-selected"/>
+        <ui:Image name="number--normal" source="/Assets/Resources/Numbers_Vector_Frame/number_0.svg" class="card__number for-normal">
             <Bindings>
-                <ui:DataBinding property="style.backgroundImage" data-source-path="image" binding-mode="ToTargetOnce"/>
+                <ui:DataBinding property="source" data-source-path="image" binding-mode="ToTargetOnce"/>
             </Bindings>
-        </ui:VisualElement>
-        <ui:Label text="Label" name="card-label" class="card-label">
+        </ui:Image>
+        <ui:Image name="number--selected" enabled="true" class="card__number for-selected">
             <Bindings>
-                <ui:DataBinding property="text" data-source-path="label" binding-mode="ToTargetOnce"/>
+                <ui:DataBinding property="source" data-source-path="image" binding-mode="ToTargetOnce"/>
             </Bindings>
-        </ui:Label>
+        </ui:Image>
+        <Bindings>
+            <ui:DataBinding property="style.unityMaterial" data-source-path="materialDefinition" binding-mode="ToTargetOnce"/>
+        </Bindings>
     </ui:VisualElement>
 </ui:UXML>
