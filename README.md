@@ -19,7 +19,7 @@ https://uranuno.github.io/HorizontalCarouselUITK/
 
 ```xml
 <!-- Example UXML -->
-<HorizontalCarousel visible-item-count="5" fixed-item-width="200" item-template="CardItem.uxml">
+<HorizontalCarousel visible-item-count="5" fixed-item-width="200" item-template="CardItem.uxml" data-source="Data1.asset">
     <!-- Runtime Binding -->
     <Bindings>
         <ui:DataBinding property="itemsSource" data-source-path="cards" binding-mode="ToTargetOnce"/>
