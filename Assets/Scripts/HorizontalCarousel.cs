@@ -246,7 +246,7 @@ public partial class HorizontalCarousel : VisualElement, INotifyValueChanged<int
     // モデルが更新されたら呼ぶ
     private void Rebuild()
     {
-        m_ItemCount = Mathf.Min(visibleItemCount, m_ItemSourceCount);
+        m_ItemCount = Mathf.Min(visibleItemCount + 1, m_ItemSourceCount);
 
         m_ItemStates.Clear();
         m_Container.Clear();
