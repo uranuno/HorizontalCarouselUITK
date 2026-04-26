@@ -4,6 +4,11 @@
 
 A horizontal carousel custom control for Unity UI Toolkit.
 
+## Demo
+Works on both desktop and mobile.
+
+https://uranuno.github.io/HorizontalCarouselUITK/
+
 ## Features
 - Inspired by UI Toolkit's ListView
 - Recycles a fixed number of items
