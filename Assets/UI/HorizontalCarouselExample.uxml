@@ -32,7 +32,7 @@
                 <ui:Button name="prev">
                     <ui:Image class="button__arrow"/>
                 </ui:Button>
-                <HorizontalCarousel visible-item-count="6" offset-item-count="2" fixed-item-width="200" center="true" loop="false" item-template="CardItem.uxml">
+                <HorizontalCarousel visible-item-count="6" offset-item-count="2" fixed-item-width="200" center="true" wrap="false" item-template="CardItem.uxml">
                     <Bindings>
                         <ui:DataBinding property="itemsSource" data-source-path="cards" binding-mode="ToTargetOnce"/>
                         <ui:DataBinding property="value" data-source-path="selected" binding-mode="TwoWay"/>
