@@ -8,7 +8,8 @@ A horizontal carousel custom control for Unity UI Toolkit.
 
 Works on both desktop and mobile.
 
-https://uranuno.github.io/HorizontalCarouselUITK/
+- https://uranuno.github.io/HorizontalCarouselUITK/
+- Unity Play https://play.unity.com/en/games/ab18fc6a-d833-4931-8296-3273272b5b5c/ui-toolkit-horizontal-carousel
 
 ## Features
 
