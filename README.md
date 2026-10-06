@@ -5,16 +5,18 @@
 A horizontal carousel custom control for Unity UI Toolkit.
 
 ## Demo
+
 Works on both desktop and mobile.
 
 https://uranuno.github.io/HorizontalCarouselUITK/
 
 ## Features
+
 - Inspired by UI Toolkit's ListView
 - Recycles a fixed number of items
 - Built with a flex layout
 - Supports Runtime Binding
-- Supports drag scrolling
+- Supports drag scrolling and momentum snapping
 - Supports both relative (`ScrollBy`) and absolute (`value`) navigation
 
 ```xml
@@ -53,9 +55,10 @@ horizontalCarousel.RegisterValueChangedCallback(evt =>
 ```
 
 ## Layout Options
+
 - `wrap`:
-    - `true` → Infinite scrolling (default)
-    - `false` → Stops at edges
+  - `true` → Infinite scrolling (default)
+  - `false` → Stops at edges
 - `center`: Aligns items to the center
 
 <figure>
@@ -65,12 +68,14 @@ horizontalCarousel.RegisterValueChangedCallback(evt =>
 </figure>
 
 ## References
+
 - [Create Scalable & Performant UI for Games in Unity 6 | Unity](https://unity.com/resources/scalable-performant-ui-uitoolkit-unity-6)
 - [seamlessLoop | GSAP | Docs & Learning](https://gsap.com/docs/v3/HelperFunctions/helpers/seamlessLoop/)
 - [ListView.cs · Unity-Technologies/UnityCsReference](https://github.com/Unity-Technologies/UnityCsReference/blob/master/Modules/UIElements/Core/Controls/ListView.cs)
 - [Layouts#PageView | App UI | 2.1.9](https://docs.unity3d.com/Packages/com.unity.dt.app-ui@2.1/manual/layouts.html#pageview)
 
 ### Shader Graph
+
 - [UI Toolkit Tutorial: Custom Shaders for UI Toolkit (6.3) - YouTube](https://www.youtube.com/watch?v=xAOBBW9hsjA)
 - [Making a Doodle Shader; feat frogino! - YouTube](https://www.youtube.com/watch?v=F6Xn5WSarhg)
 - [【Unity】UVスペースのディストーションシェーダー | エンホリ - ENVIRONMENT HOLIC｜C&R Creative Studios](https://3d.crdg.jp/env/2023/07/10/1625/)
